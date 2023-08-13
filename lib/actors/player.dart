@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_first_game/pixel_adventure.dart';
 
 enum PlayerStates {
@@ -13,11 +15,20 @@ enum PlayerStates {
   wallJump,
 }
 
+enum PlayerDirection { left, right, none, jump, fall }
+
 //if sprite has a lot of animations use this class to extend
-class Player extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventure> {
+class Player extends SpriteAnimationGroupComponent
+    with HasGameRef<PixelAdventure>, KeyboardHandler {
   String character;
 
-  Player({Vector2? position, required this.character}) : super(position: position); //init position of sprite with super
+  Player({Vector2? position, required this.character})
+      : super(position: position); //init position of sprite with super
+
+  PlayerDirection playerDirection = PlayerDirection.none;
+  double moveSpeed = 100;
+  Vector2 velocity = Vector2.zero();
+  bool isFacingRight = true;
 
   late final SpriteAnimation spriteAnimation;
   late final SpriteAnimation runningSpriteAnimation;
@@ -29,11 +40,76 @@ class Player extends SpriteAnimationGroupComponent with HasGameRef<PixelAdventur
 
   final double stepTime = 0.05;
 
+  double horizontalDirection = 0;
+  double verticalDirection = 0;
+
+  bool isWorkingTwice = false;
+
   @override
   FutureOr<void> onLoad() async {
     _loadAllAnimations(); //function for loading player
-
     return super.onLoad();
+  }
+
+  @override
+  void update(double dt) {
+    velocity = Vector2(horizontalDirection, verticalDirection);
+
+    position += velocity * dt;
+
+    super.update(dt);
+    if (horizontalDirection < 0 && scale.x > 0) {
+      flipHorizontallyAroundCenter();
+      current = PlayerStates.running;
+    } else if (horizontalDirection > 0 && scale.x < 0) {
+      flipHorizontallyAroundCenter();
+      current = PlayerStates.running;
+    } else if (verticalDirection < 0) {
+      current = PlayerStates.jump;
+    }
+  }
+
+  @override
+  bool onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (clickedUp) return false;
+    if (isWorkingTwice) return false;
+    isWorkingTwice = true;
+    horizontalDirection = 0;
+
+    if (keysPressed.contains(LogicalKeyboardKey.keyA) ||
+        keysPressed.contains(LogicalKeyboardKey.arrowLeft)) {
+      horizontalDirection = -100;
+    } else if (keysPressed.contains(LogicalKeyboardKey.keyD) ||
+        keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
+      horizontalDirection = 100;
+    } else if (keysPressed.contains(LogicalKeyboardKey.keyW) ||
+        keysPressed.contains(LogicalKeyboardKey.arrowUp)) {
+      verticalDirection = -100;
+      fall();
+    }  else {
+      horizontalDirection = 0;
+      verticalDirection = 0;
+      current = PlayerStates.idle;
+    }
+
+    workingTwiceEventChecker();
+    return true;
+  }
+
+  void workingTwiceEventChecker() async {
+    await Future.delayed(Duration.zero);
+    isWorkingTwice = false;
+  }
+
+  bool clickedUp = false;
+
+  void fall() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    verticalDirection = 100;
+    await Future.delayed(const Duration(milliseconds: 300));
+    verticalDirection = 0;
+    current = PlayerStates.idle;
+    clickedUp = false;
   }
 
   void _loadAllAnimations() async {

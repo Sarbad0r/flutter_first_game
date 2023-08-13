@@ -7,6 +7,28 @@
     "expandedProjectPaths": [
     ],
     "fileStates": {
+        "Level_1.tmx": {
+            "expandedObjectLayers": [
+                4
+            ],
+            "scale": 2,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 169.25,
+                "y": 220.25
+            }
+        },
+        "Level_2.tmx": {
+            "expandedObjectLayers": [
+                2
+            ],
+            "scale": 1.3893749999999998,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 320.64777327935235,
+                "y": 184.61538461538467
+            }
+        }
     },
     "last.imagePath": "C:/Users/avazs.LAPTOP-I4FB2CH8/StudioProjects/flutter_first_game/assets/images/Terrain",
     "map.height": 23,
